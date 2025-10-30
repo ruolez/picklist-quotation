@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Picklist Converter</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-title">Picklist to Quotation Converter</div>
+            <ul class="nav-links">
+                <li><a href="/" class="active">Dashboard</a></li>
+                <li><a href="/picklists">Picklists</a></li>
+                <li><a href="/history">History</a></li>
+                <li><a href="/settings">Settings</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 24px;">Dashboard</h1>
+
+        <!-- Alerts -->
+        <div id="alert-container"></div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Converted</div>
+                <div class="stat-value" id="stat-converted">-</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">Pending Picklists</div>
+                <div class="stat-value" id="stat-pending">-</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Success Rate</div>
+                <div class="stat-value" id="stat-success-rate">-</div>
+            </div>
+            <div class="stat-card error">
+                <div class="stat-label">Failed Conversions</div>
+                <div class="stat-value" id="stat-failed">-</div>
+            </div>
+        </div>
+
+        <!-- Polling Status -->
+        <div class="card">
+            <h2 class="card-title">Polling Service</h2>
+            <div id="poller-status" class="status-indicator stopped">
+                <span class="status-dot gray"></span>
+                <span>Stopped</span>
+            </div>
+            <div class="btn-group">
+                <button id="btn-start-poller" class="btn btn-success">Start Auto-Polling</button>
+                <button id="btn-stop-poller" class="btn btn-error">Stop Auto-Polling</button>
+            </div>
+        </div>
+
+        <!-- Manual Conversion -->
+        <div class="card">
+            <h2 class="card-title">Manual Conversion</h2>
+            <p style="margin-bottom: 16px; color: var(--text-secondary);">
+                Click the button below to manually check for new picklists and convert them to quotations.
+            </p>
+            <button id="btn-convert" class="btn btn-primary">
+                Convert Pending Picklists
+            </button>
+            <div id="conversion-results" style="margin-top: 16px;"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

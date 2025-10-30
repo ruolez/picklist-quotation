@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picklists - Picklist Converter</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-title">Picklist to Quotation Converter</div>
+            <ul class="nav-links">
+                <li><a href="/" class="active">Picklists</a></li>
+                <li><a href="/history">History</a></li>
+                <li><a href="/settings">Settings</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 24px;">Pending Picklists</h1>
+
+        <!-- Alerts -->
+        <div id="alert-container"></div>
+
+        <!-- View Toggle -->
+        <div class="card">
+            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                <input type="checkbox" id="show-archived" style="cursor: pointer;">
+                <span style="font-weight: 500;">Show Archived Picklists</span>
+            </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="btn-group">
+                <button id="btn-select-all" class="btn btn-secondary">Select All</button>
+                <button id="btn-deselect-all" class="btn btn-secondary">Deselect All</button>
+                <button id="btn-convert-selected" class="btn btn-primary" disabled>Convert Selected (<span id="selected-count">0</span>)</button>
+                <button id="btn-archive-selected" class="btn btn-secondary" disabled>Archive Selected</button>
+                <button id="btn-refresh" class="btn btn-secondary">Refresh List</button>
+            </div>
+        </div>
+
+        <!-- Conversion Results -->
+        <div id="conversion-results"></div>
+
+        <!-- Picklist Table -->
+        <div class="card">
+            <div class="table-container">
+                <table id="picklists-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">
+                                <input type="checkbox" id="checkbox-all">
+                            </th>
+                            <th class="sortable" onclick="setSortColumn('id')">
+                                Picklist ID<span id="sort-id" class="sort-indicator"> ↓</span>
+                            </th>
+                            <th class="sortable" onclick="setSortColumn('date')">
+                                Created Date<span id="sort-date" class="sort-indicator"></span>
+                            </th>
+                            <th class="sortable" onclick="setSortColumn('products')">
+                                Products Count<span id="sort-products" class="sort-indicator"></span>
+                            </th>
+                            <th class="sortable" onclick="setSortColumn('status')">
+                                Status<span id="sort-status" class="sort-indicator"></span>
+                            </th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="picklists-body">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 40px;">
+                                <span class="spinner"></span> Loading picklists...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/picklists.js?v=20251030-FIXED"></script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Picklist Converter</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-title">Picklist to Quotation Converter</div>
+            <ul class="nav-links">
+                <li><a href="/">Picklists</a></li>
+                <li><a href="/history">History</a></li>
+                <li><a href="/settings" class="active">Settings</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 24px;">Settings</h1>
+
+        <!-- Alerts -->
+        <div id="alert-container"></div>
+
+        <!-- ShipperPlatform Database Configuration -->
+        <div class="card">
+            <h2 class="card-title">ShipperPlatform Database Configuration</h2>
+
+            <form id="shipper-form" class="form-section">
+                <div class="form-group">
+                    <label class="form-label" for="shipper-host">Host</label>
+                    <input type="text" id="shipper-host" class="form-input" placeholder="localhost" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="shipper-port">Port</label>
+                    <input type="number" id="shipper-port" class="form-input" placeholder="1433" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="shipper-user">Username</label>
+                    <input type="text" id="shipper-user" class="form-input" placeholder="sa" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="shipper-password">Password</label>
+                    <input type="password" id="shipper-password" class="form-input" placeholder="Enter password">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="shipper-database">Database Name</label>
+                    <input type="text" id="shipper-database" class="form-input" placeholder="ShipperPlatform" required>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" id="btn-test-shipper" class="btn btn-secondary">Test Connection</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- BackOffice Database Configuration -->
+        <div class="card">
+            <h2 class="card-title">BackOffice Database Configuration</h2>
+
+            <form id="backoffice-form" class="form-section">
+                <div class="form-group">
+                    <label class="form-label" for="backoffice-host">Host</label>
+                    <input type="text" id="backoffice-host" class="form-input" placeholder="localhost" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="backoffice-port">Port</label>
+                    <input type="number" id="backoffice-port" class="form-input" placeholder="1433" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="backoffice-user">Username</label>
+                    <input type="text" id="backoffice-user" class="form-input" placeholder="sa" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="backoffice-password">Password</label>
+                    <input type="password" id="backoffice-password" class="form-input" placeholder="Enter password">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="backoffice-database">Database Name</label>
+                    <input type="text" id="backoffice-database" class="form-input" placeholder="BackOffice" required>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" id="btn-test-backoffice" class="btn btn-secondary">Test Connection</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Inventory Database Configuration -->
+        <div class="card">
+            <h2 class="card-title">Inventory Database Configuration</h2>
+            <p class="card-description">Optional fallback database for missing products. When enabled, products not found in BackOffice will be searched here and copied if found.</p>
+
+            <form id="inventory-form" class="form-section">
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="inventory-enabled" class="form-checkbox">
+                        <span>Enable Inventory Fallback</span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="inventory-host">Host</label>
+                    <input type="text" id="inventory-host" class="form-input" placeholder="localhost">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="inventory-port">Port</label>
+                    <input type="number" id="inventory-port" class="form-input" placeholder="1433">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="inventory-user">Username</label>
+                    <input type="text" id="inventory-user" class="form-input" placeholder="sa">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="inventory-password">Password</label>
+                    <input type="password" id="inventory-password" class="form-input" placeholder="Enter password">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="inventory-database">Database Name</label>
+                    <input type="text" id="inventory-database" class="form-input" placeholder="Inventory">
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" id="btn-test-inventory" class="btn btn-secondary">Test Connection</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Save Database Configuration -->
+        <div class="card">
+            <button id="btn-save-db" class="btn btn-primary">Save Database Configuration</button>
+        </div>
+
+        <!-- Quotation Defaults -->
+        <div class="card">
+            <h2 class="card-title">Quotation Defaults</h2>
+
+            <form id="defaults-form" class="form-section">
+                <div class="form-group">
+                    <label class="form-label" for="customer-id">Customer ID</label>
+                    <input type="number" id="customer-id" class="form-input" placeholder="1" required>
+                    <small class="error-message">The CustomerID from Customers_tbl to use for all quotations</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="default-status">Default Status</label>
+                    <input type="number" id="default-status" class="form-input" placeholder="1" required>
+                    <small class="error-message">Status value for new quotations (e.g., 1 = Pending)</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="title-prefix">Quotation Title Prefix</label>
+                    <input type="text" id="title-prefix" class="form-input" placeholder="PL" required>
+                    <small class="error-message">Prefix for quotation titles (e.g., "PL" → "PL 123")</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="polling-interval">Polling Interval (seconds)</label>
+                    <input type="number" id="polling-interval" class="form-input" placeholder="60" required min="10">
+                    <small class="error-message">How often to check for new picklists (minimum 10 seconds)</small>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" id="btn-save-defaults" class="btn btn-primary">Save Defaults</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/js/settings.js"></script>
+</body>
+</html>

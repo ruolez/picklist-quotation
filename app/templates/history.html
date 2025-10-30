@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - Picklist Converter</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="container">
+            <div class="nav-title">Picklist to Quotation Converter</div>
+            <ul class="nav-links">
+                <li><a href="/">Picklists</a></li>
+                <li><a href="/history" class="active">History</a></li>
+                <li><a href="/settings">Settings</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 style="margin-bottom: 24px;">Conversion History</h1>
+
+        <!-- Filter Section -->
+        <div class="card" style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-status="all">All</button>
+                    <button class="filter-btn" data-status="success">Success</button>
+                    <button class="filter-btn" data-status="failed">Failed</button>
+                </div>
+                <div class="action-buttons">
+                    <button id="btn-delete-selected" class="btn btn-danger" disabled>Delete Selected (0)</button>
+                    <button id="btn-delete-all-failed" class="btn btn-danger">Delete All Failed</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="card">
+            <div class="table-container">
+                <table id="history-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" id="select-all">
+                            </th>
+                            <th>Picklist ID</th>
+                            <th>Quotation Number</th>
+                            <th>Status</th>
+                            <th>Converted At</th>
+                            <th style="width: 300px;">Error Message</th>
+                            <th style="width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <span class="spinner"></span> Loading history...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="btn-group" style="margin-top: 20px;">
+                <button id="btn-prev" class="btn btn-secondary" disabled>Previous</button>
+                <button id="btn-next" class="btn btn-secondary">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Confirm Deletion</h2>
+            <p id="modal-message">Are you sure you want to delete this record?</p>
+            <div class="btn-group" style="margin-top: 24px;">
+                <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
+                <button id="modal-confirm" class="btn btn-danger">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/history.js"></script>
+</body>
+</html>
