@@ -454,8 +454,8 @@ class PicklistConverter:
                     self._truncate_string(customer.get('ShipZipCode') or '', 10),
                     self._truncate_string(customer.get('ShipPhone_Number') or '', 13),
                     0,  # ShipperID
-                    0,  # SalesRepID
-                    0,  # TermID
+                    1,  # SalesRepID
+                    1,  # TermID
                     '',  # Header
                     '',  # Footer
                     '',  # Notes
