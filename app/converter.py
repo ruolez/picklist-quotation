@@ -232,7 +232,20 @@ class PicklistConverter:
                 database=config['backoffice_database']
             )
 
-            # Step 1: Fetch products from inventory
+            # Step 1: Get BackOffice Items_tbl schema (excluding IDENTITY columns)
+            with backoffice_db.get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                    SELECT COLUMN_NAME
+                    FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = 'Items_tbl'
+                    AND COLUMNPROPERTY(OBJECT_ID(TABLE_SCHEMA + '.' + TABLE_NAME), COLUMN_NAME, 'IsIdentity') = 0
+                    ORDER BY ORDINAL_POSITION
+                """)
+                backoffice_columns = [row['COLUMN_NAME'] for row in cursor.fetchall()]
+                print(f"DEBUG: BackOffice Items_tbl has {len(backoffice_columns)} non-identity columns")
+
+            # Step 2: Fetch products from inventory
             inventory_products = self.lookup_in_inventory(barcodes)
             if not inventory_products:
                 return {'success': False, 'error': 'No products found in inventory for given barcodes'}
@@ -240,7 +253,7 @@ class PicklistConverter:
             copied = []
             failed = []
 
-            # Step 2: Insert each product into BackOffice
+            # Step 3: Insert each product into BackOffice
             for barcode in barcodes:
                 if barcode not in inventory_products:
                     failed.append({'barcode': barcode, 'error': 'Not found in inventory'})
@@ -252,66 +265,27 @@ class PicklistConverter:
                     with backoffice_db.get_connection() as conn:
                         cursor = conn.cursor()
 
-                        # Get all columns except ProductID (IDENTITY column)
-                        # Insert with explicit column list, excluding ProductID
-                        insert_query = """
-                            INSERT INTO dbo.Items_tbl (
-                                ProductSKU, ProductUPC, ProductDescription, CateID, SubCateID,
-                                ManuID, UnitID, ItemSize, ItemWeight, UnitPrice, UnitPriceA,
-                                UnitPriceB, UnitPriceC, UnitCost, QuantOnHand, QuantOnOrder,
-                                ReorderLevel, ReorderQuant, MSRPrice, MasterPackQty, InnerPackQty,
-                                UnitQty, UnitID2, UnitQty2, UnitPrice2, UnitID3, UnitQty3,
-                                UnitPrice3, UnitID4, UnitQty4, UnitPrice4, LastReceived, LastSold,
-                                ExpDate, Discontinued, StLocationID, MinOrderQty, MaxOrderQty,
-                                Taxable, SPPromoted, ItemNotes, WebDescription, ItemWebInfo,
-                                WebAvailable, WebFeatured, WebNew, WebPrice, WebImage, Allergen1,
-                                Allergen2, Allergen3, Allergen4, Allergen5, Allergen6, Allergen7,
-                                Allergen8, Allergen9, Allergen10, AllergenFreeFrom, ItemImageLocal
-                            ) VALUES (
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-                            )
-                        """
+                        # Build dynamic INSERT based on available columns
+                        common_columns = [col for col in backoffice_columns if col in product]
 
-                        values = (
-                            product.get('ProductSKU'), product.get('ProductUPC'),
-                            product.get('ProductDescription'), product.get('CateID'),
-                            product.get('SubCateID'), product.get('ManuID'), product.get('UnitID'),
-                            product.get('ItemSize'), product.get('ItemWeight'),
-                            product.get('UnitPrice'), product.get('UnitPriceA'),
-                            product.get('UnitPriceB'), product.get('UnitPriceC'),
-                            product.get('UnitCost'), product.get('QuantOnHand'),
-                            product.get('QuantOnOrder'), product.get('ReorderLevel'),
-                            product.get('ReorderQuant'), product.get('MSRPrice'),
-                            product.get('MasterPackQty'), product.get('InnerPackQty'),
-                            product.get('UnitQty'), product.get('UnitID2'), product.get('UnitQty2'),
-                            product.get('UnitPrice2'), product.get('UnitID3'),
-                            product.get('UnitQty3'), product.get('UnitPrice3'),
-                            product.get('UnitID4'), product.get('UnitQty4'),
-                            product.get('UnitPrice4'), product.get('LastReceived'),
-                            product.get('LastSold'), product.get('ExpDate'),
-                            product.get('Discontinued'), product.get('StLocationID'),
-                            product.get('MinOrderQty'), product.get('MaxOrderQty'),
-                            product.get('Taxable'), product.get('SPPromoted'),
-                            product.get('ItemNotes'), product.get('WebDescription'),
-                            product.get('ItemWebInfo'), product.get('WebAvailable'),
-                            product.get('WebFeatured'), product.get('WebNew'),
-                            product.get('WebPrice'), product.get('WebImage'),
-                            product.get('Allergen1'), product.get('Allergen2'),
-                            product.get('Allergen3'), product.get('Allergen4'),
-                            product.get('Allergen5'), product.get('Allergen6'),
-                            product.get('Allergen7'), product.get('Allergen8'),
-                            product.get('Allergen9'), product.get('Allergen10'),
-                            product.get('AllergenFreeFrom'), product.get('ItemImageLocal')
-                        )
+                        if not common_columns:
+                            failed.append({'barcode': barcode, 'error': 'No matching columns between databases'})
+                            continue
+
+                        columns_str = ', '.join(common_columns)
+                        placeholders = ', '.join(['%s'] * len(common_columns))
+                        values = tuple(product[col] for col in common_columns)
+
+                        insert_query = f"INSERT INTO dbo.Items_tbl ({columns_str}) VALUES ({placeholders})"
+
+                        print(f"DEBUG: Inserting {len(common_columns)} columns for barcode {barcode}")
 
                         cursor.execute(insert_query, values)
                         conn.commit()
                         copied.append(barcode)
 
                 except Exception as e:
+                    print(f"ERROR: Failed to copy barcode {barcode}: {str(e)}")
                     failed.append({'barcode': barcode, 'error': str(e)})
 
             return {
@@ -323,7 +297,80 @@ class PicklistConverter:
             }
 
         except Exception as e:
+            print(f"ERROR: copy_products_from_inventory exception: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return {'success': False, 'error': f'Error copying products: {str(e)}'}
+
+    def auto_sync_from_inventory(self, backoffice_db: SQLServerManager, missing_barcodes: list) -> dict:
+        """
+        Automatically sync missing products from Inventory to BackOffice during conversion
+        Returns: {
+            'synced_count': int,
+            'failed_count': int,
+            'synced_barcodes': [list of successfully synced barcodes],
+            'failed_barcodes': [list of barcodes that couldn't be synced]
+        }
+        """
+        if not missing_barcodes:
+            return {
+                'synced_count': 0,
+                'failed_count': 0,
+                'synced_barcodes': [],
+                'failed_barcodes': []
+            }
+
+        # Check if inventory database is configured
+        inventory_db = self.get_inventory_db_manager()
+        if not inventory_db:
+            print("INFO: Inventory database not configured, skipping auto-sync")
+            return {
+                'synced_count': 0,
+                'failed_count': len(missing_barcodes),
+                'synced_barcodes': [],
+                'failed_barcodes': missing_barcodes
+            }
+
+        print(f"INFO: Attempting to auto-sync {len(missing_barcodes)} missing products from Inventory")
+
+        # Look up products in Inventory
+        inventory_products = self.lookup_in_inventory(missing_barcodes)
+
+        if not inventory_products:
+            print(f"INFO: None of the missing products found in Inventory database")
+            return {
+                'synced_count': 0,
+                'failed_count': len(missing_barcodes),
+                'synced_barcodes': [],
+                'failed_barcodes': missing_barcodes
+            }
+
+        # Attempt to copy found products to BackOffice
+        found_barcodes = list(inventory_products.keys())
+        print(f"INFO: Found {len(found_barcodes)} products in Inventory, attempting to copy to BackOffice")
+
+        copy_result = self.copy_products_from_inventory(found_barcodes)
+
+        synced_barcodes = copy_result.get('copied', [])
+        failed_to_copy = [item['barcode'] for item in copy_result.get('failed', [])]
+
+        # Products not found in inventory at all
+        not_in_inventory = [bc for bc in missing_barcodes if bc not in inventory_products]
+
+        all_failed = failed_to_copy + not_in_inventory
+
+        print(f"INFO: Auto-sync complete - Synced: {len(synced_barcodes)}, Failed: {len(all_failed)}")
+        if synced_barcodes:
+            print(f"INFO: Successfully synced barcodes: {', '.join(synced_barcodes)}")
+        if all_failed:
+            print(f"INFO: Failed to sync barcodes: {', '.join(all_failed)}")
+
+        return {
+            'synced_count': len(synced_barcodes),
+            'failed_count': len(all_failed),
+            'synced_barcodes': synced_barcodes,
+            'failed_barcodes': all_failed
+        }
 
     def get_next_quotation_number(self, backoffice_db: SQLServerManager) -> int:
         """Get the next quotation number by finding max and adding 1"""
@@ -388,6 +435,7 @@ class PicklistConverter:
                     barcode_to_item[item['ProductUPC']] = item
 
         # Step 3: Match products using the lookup dictionary
+        missing_barcodes = []  # Track barcodes not found in BackOffice (for auto-sync)
         for product in products:
             barcode = product.get('barcode')
             if not barcode:
@@ -395,6 +443,7 @@ class PicklistConverter:
 
             matched = barcode_to_item.get(barcode)
             if not matched:
+                missing_barcodes.append(barcode)  # Track for auto-sync
                 unmatched_barcodes.append(f"Barcode '{barcode}' (Product: {product.get('name')})")
             else:
                 matched_products.append({
@@ -402,7 +451,54 @@ class PicklistConverter:
                     'item': matched
                 })
 
-        # If any products couldn't be matched, fail the conversion
+        # Step 4: Attempt automatic sync from Inventory for missing products
+        if missing_barcodes:
+            print(f"INFO: {len(missing_barcodes)} products not found in BackOffice, attempting auto-sync from Inventory")
+            sync_result = self.auto_sync_from_inventory(backoffice_db, missing_barcodes)
+
+            # If any products were successfully synced, re-query BackOffice
+            if sync_result['synced_count'] > 0:
+                synced_barcodes = sync_result['synced_barcodes']
+                print(f"INFO: Re-querying BackOffice for {len(synced_barcodes)} newly synced products")
+
+                with backoffice_db.get_connection() as conn:
+                    cursor = conn.cursor()
+                    placeholders = ','.join(['%s'] * len(synced_barcodes))
+                    query = f"""
+                        SELECT i.*, u.UnitDesc
+                        FROM dbo.Items_tbl i
+                        LEFT JOIN dbo.Units_tbl u ON i.UnitID = u.UnitID
+                        WHERE i.ProductUPC IN ({placeholders})
+                    """
+                    cursor.execute(query, tuple(synced_barcodes))
+                    synced_items = cursor.fetchall()
+
+                    # Update barcode_to_item with newly synced products
+                    for item in synced_items:
+                        barcode_to_item[item['ProductUPC']] = item
+
+                # Re-match products with updated barcode_to_item
+                matched_products = []
+                unmatched_barcodes = []
+
+                for product in products:
+                    barcode = product.get('barcode')
+                    if not barcode:
+                        unmatched_barcodes.append(f"Product '{product.get('name')}' has no barcode")
+                        continue
+
+                    matched = barcode_to_item.get(barcode)
+                    if not matched:
+                        unmatched_barcodes.append(f"Barcode '{barcode}' (Product: {product.get('name')})")
+                    else:
+                        matched_products.append({
+                            'pick_list_product': product,
+                            'item': matched
+                        })
+
+                print(f"INFO: After auto-sync - Matched: {len(matched_products)}, Unmatched: {len(unmatched_barcodes)}")
+
+        # If any products couldn't be matched after auto-sync, fail the conversion
         if unmatched_barcodes:
             error_msg = f"Unable to match products: {', '.join(unmatched_barcodes)}"
             return (False, None, None, error_msg)

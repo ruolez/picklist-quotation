@@ -222,13 +222,19 @@ def copy_products_from_inventory():
         data = request.json
         barcodes = data.get('barcodes', [])
 
+        print(f"DEBUG: Received request to copy barcodes: {barcodes}")
+
         if not barcodes:
             return jsonify({'success': False, 'error': 'No barcodes provided'}), 400
 
         result = converter.copy_products_from_inventory(barcodes)
 
+        print(f"DEBUG: Copy result: {result}")
+
         if not result.get('success'):
-            return jsonify({'success': False, 'error': result.get('error', 'Unknown error')}), 500
+            error_msg = result.get('error', 'Unknown error')
+            print(f"ERROR: Copy failed: {error_msg}")
+            return jsonify({'success': False, 'error': error_msg}), 500
 
         return jsonify({
             'success': True,
@@ -238,6 +244,9 @@ def copy_products_from_inventory():
             'failed_count': result['failed_count']
         })
     except Exception as e:
+        print(f"EXCEPTION in copy_products_from_inventory: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

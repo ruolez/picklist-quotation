@@ -626,7 +626,7 @@ function showMissingProductsModal(missing, totalProducts, missingCount, canCopyC
 
     const modalHtml = `
         <div class="modal-overlay" id="missing-products-modal">
-            <div class="modal">
+            <div class="modal-content">
                 <div class="modal-header">
                     <h2 style="margin: 0;">⚠️ Missing Products</h2>
                     <button class="modal-close" onclick="closeMissingProductsModal()">&times;</button>
