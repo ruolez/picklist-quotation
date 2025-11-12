@@ -35,12 +35,13 @@ class PicklistConverter:
         return result
 
     def get_picklist_products(self, shipper_db: SQLServerManager, picklist_id: int) -> list:
-        """Get products for a specific picklist"""
+        """Get products for a specific picklist, excluding zero/null quantities"""
         with shipper_db.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT * FROM dbo.pick_list_products
                 WHERE id_pick_list = %s
+                  AND ISNULL(amount, 0) > 0
             """, (picklist_id,))
             return cursor.fetchall()
 
@@ -567,7 +568,7 @@ class PicklistConverter:
                     product = matched['pick_list_product']
                     item = matched['item']
 
-                    qty = product.get('amount', 1)
+                    qty = product['amount']  # Safe because we filter out zero/null quantities
                     unit_price = item.get('UnitPrice', 0) or 0
                     unit_cost = item.get('UnitCost', 0) or 0
                     extended_price = qty * unit_price
@@ -674,10 +675,10 @@ class PicklistConverter:
                 database=config['backoffice_database']
             )
 
-            # Get picklist products
+            # Get picklist products (excludes zero/null quantity products)
             products = self.get_picklist_products(shipper_db, picklist_id)
             if not products:
-                error_msg = "No products found in picklist"
+                error_msg = f"Picklist #{picklist_id} has no products with quantity > 0"
                 try:
                     self.sqlite_manager.log_conversion(picklist_id, False, error_message=error_msg)
                 except Exception as log_error:
