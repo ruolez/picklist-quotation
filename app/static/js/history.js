@@ -56,13 +56,13 @@ async function deleteRecord(recordId) {
         const data = await response.json();
 
         if (data.success) {
-            showAlert('Record deleted successfully', 'success');
+            showToast('Record deleted successfully', 'success');
             loadHistory(currentPage);
         } else {
-            showAlert(`Error: ${data.error}`, 'error');
+            showToast(`Error: ${data.error}`, 'error');
         }
     } catch (error) {
-        showAlert(`Error deleting record: ${error.message}`, 'error');
+        showToast(`Error deleting record: ${error.message}`, 'error');
     }
 }
 
@@ -79,15 +79,15 @@ async function deleteSelected() {
         const data = await response.json();
 
         if (data.success) {
-            showAlert(`Deleted ${data.deleted_count} record(s) successfully`, 'success');
+            showToast(`Deleted ${data.deleted_count} record(s) successfully`, 'success');
             selectedRecords.clear();
             updateSelectedCount();
             loadHistory(currentPage);
         } else {
-            showAlert(`Error: ${data.error}`, 'error');
+            showToast(`Error: ${data.error}`, 'error');
         }
     } catch (error) {
-        showAlert(`Error deleting records: ${error.message}`, 'error');
+        showToast(`Error deleting records: ${error.message}`, 'error');
     }
 }
 
@@ -101,41 +101,51 @@ async function deleteAllFailed() {
         const data = await response.json();
 
         if (data.success) {
-            showAlert(`Deleted ${data.deleted_count} failed record(s) successfully`, 'success');
+            showToast(`Deleted ${data.deleted_count} failed record(s) successfully`, 'success');
             selectedRecords.clear();
             updateSelectedCount();
             loadHistory(currentPage);
         } else {
-            showAlert(`Error: ${data.error}`, 'error');
+            showToast(`Error: ${data.error}`, 'error');
         }
     } catch (error) {
-        showAlert(`Error deleting failed records: ${error.message}`, 'error');
+        showToast(`Error deleting failed records: ${error.message}`, 'error');
     }
 }
 
-function showAlert(message, type = 'success') {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type}`;
-    alertDiv.textContent = message;
-    alertDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 16px 24px;
-        background: ${type === 'success' ? 'var(--success)' : 'var(--error)'};
-        color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        animation: slideIn 0.3s ease-out;
-    `;
+// Toast notification system (2025 Enterprise Design System)
+function showToast(message, type = 'success') {
+    const container = document.querySelector('.toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
 
-    document.body.appendChild(alertDiv);
+    const icon = document.createElement('div');
+    icon.className = 'toast-icon';
 
+    const content = document.createElement('div');
+    content.className = 'toast-content';
+
+    const messageEl = document.createElement('div');
+    messageEl.className = 'toast-message';
+    messageEl.textContent = message;
+
+    content.appendChild(messageEl);
+    toast.appendChild(icon);
+    toast.appendChild(content);
+    container.appendChild(toast);
+
+    // Auto-remove after 5 seconds
     setTimeout(() => {
-        alertDiv.style.animation = 'slideOut 0.3s ease-out';
-        setTimeout(() => alertDiv.remove(), 300);
-    }, 3000);
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
 }
 
 async function loadHistory(page = 0) {
@@ -192,21 +202,21 @@ async function loadHistory(page = 0) {
             const errorMessage = record.error_message || '-';
 
             const deleteButton = `
-                <button class="btn btn-sm btn-danger delete-record" data-record-id="${record.id}">
+                <button class="btn btn-small btn-error delete-record" data-record-id="${record.id}">
                     Delete
                 </button>
             `;
 
             row.innerHTML = `
-                <td style="text-align: center;">
+                <td class="col-checkbox">
                     <input type="checkbox" class="record-checkbox" data-record-id="${record.id}" ${selectedRecords.has(record.id) ? 'checked' : ''}>
                 </td>
                 <td>${record.pick_list_id}</td>
                 <td>${record.quotation_number || '-'}</td>
                 <td>${statusBadge}</td>
                 <td>${formatDate(record.converted_at)}</td>
-                <td style="max-width: 300px; word-wrap: break-word; font-size: 13px;">${errorMessage}</td>
-                <td>${deleteButton}</td>
+                <td class="col-error-message">${errorMessage}</td>
+                <td class="col-actions">${deleteButton}</td>
             `;
 
             tbody.appendChild(row);
@@ -219,7 +229,7 @@ async function loadHistory(page = 0) {
     } catch (error) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align: center; padding: 40px; color: var(--error);">
+                <td colspan="7" class="table-loading-cell" style="color: var(--error);">
                     Error loading history: ${error.message}
                 </td>
             </tr>

@@ -3,43 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
     <title>Picklists - Picklist Converter</title>
-    <link rel="stylesheet" href="/static/css/style.css?v=20251110-MODAL-FIX">
+    <link rel="stylesheet" href="/static/css/style.css?v=20251113-THEME">
 </head>
 <body>
-    <nav class="nav">
-        <div class="container">
-            <div class="nav-title">Picklist to Quotation Converter</div>
-            <ul class="nav-links">
-                <li><a href="/" class="active">Picklists</a></li>
-                <li><a href="/history">History</a></li>
-                <li><a href="/settings">Settings</a></li>
-            </ul>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+
+    <!-- Header with Dark Mode Toggle -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>Picklist to Quotation Converter</h1>
+                <nav class="nav-links">
+                    <a href="/" class="nav-link active">Picklists</a>
+                    <a href="/history" class="nav-link">History</a>
+                    <a href="/settings" class="nav-link">Settings</a>
+                </nav>
+            </div>
+            <div class="header-right">
+                <!-- Theme Toggle Button -->
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-slider"></div>
+                </button>
+            </div>
         </div>
-    </nav>
+    </header>
 
-    <div class="container">
-        <h1 style="margin-bottom: 24px;">Pending Picklists</h1>
-
-        <!-- Alerts -->
-        <div id="alert-container"></div>
-
-        <!-- View Toggle -->
-        <div class="card">
-            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                <input type="checkbox" id="show-archived" style="cursor: pointer;">
-                <span style="font-weight: 500;">Show Archived Picklists</span>
-            </label>
-        </div>
+    <main id="main-content" class="container">
+        <h1 class="mb-3">Pending Picklists</h1>
 
         <!-- Action Buttons -->
         <div class="card">
-            <div class="btn-group">
-                <button id="btn-select-all" class="btn btn-secondary">Select All</button>
-                <button id="btn-deselect-all" class="btn btn-secondary">Deselect All</button>
-                <button id="btn-convert-selected" class="btn btn-primary" disabled>Convert Selected (<span id="selected-count">0</span>)</button>
-                <button id="btn-archive-selected" class="btn btn-secondary" disabled>Archive Selected</button>
-                <button id="btn-refresh" class="btn btn-secondary">Refresh List</button>
+            <div class="btn-group" style="justify-content: space-between;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button id="btn-select-all" class="btn btn-secondary">Select All</button>
+                    <button id="btn-deselect-all" class="btn btn-secondary">Deselect All</button>
+                    <button id="btn-convert-selected" class="btn btn-primary" disabled>Convert Selected (<span id="selected-count">0</span>)</button>
+                    <button id="btn-archive-selected" class="btn btn-secondary" disabled>Archive Selected</button>
+                    <button id="btn-refresh" class="btn btn-secondary">Refresh List</button>
+                </div>
+                <label class="checkbox-label-flex">
+                    <input type="checkbox" id="show-archived">
+                    <span>Show Archived Picklists</span>
+                </label>
             </div>
         </div>
 
@@ -52,27 +60,24 @@
                 <table id="picklists-table">
                     <thead>
                         <tr>
-                            <th style="width: 50px;">
-                                <input type="checkbox" id="checkbox-all">
+                            <th class="col-checkbox-lg">
+                                <input type="checkbox" id="checkbox-all" aria-label="Select all picklists">
                             </th>
-                            <th class="sortable" onclick="setSortColumn('id')">
+                            <th class="col-picklist-id sortable" onclick="setSortColumn('id')">
                                 Picklist ID<span id="sort-id" class="sort-indicator"> ↓</span>
                             </th>
-                            <th class="sortable" onclick="setSortColumn('date')">
+                            <th class="col-created-date sortable" onclick="setSortColumn('date')">
                                 Created Date<span id="sort-date" class="sort-indicator"></span>
                             </th>
-                            <th class="sortable" onclick="setSortColumn('products')">
-                                Products Count<span id="sort-products" class="sort-indicator"></span>
-                            </th>
-                            <th class="sortable" onclick="setSortColumn('status')">
+                            <th class="col-status sortable" onclick="setSortColumn('status')">
                                 Status<span id="sort-status" class="sort-indicator"></span>
                             </th>
-                            <th>Actions</th>
+                            <th class="col-actions-wide">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="picklists-body">
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px;">
+                            <td colspan="5" class="table-loading-cell">
                                 <span class="spinner"></span> Loading picklists...
                             </td>
                         </tr>
@@ -80,8 +85,19 @@
                 </table>
             </div>
         </div>
-    </div>
+    </main>
 
-    <script src="/static/js/picklists.js?v=20251110-MODAL-FIX"></script>
+    <!-- Theme and Keyboard Management Scripts -->
+    <script src="/static/js/theme.js?v=20251113-THEME"></script>
+    <script src="/static/js/keyboard.js?v=20251113-THEME"></script>
+    <script src="/static/js/picklists.js?v=20251113-THEME"></script>
+
+    <!-- Theme Toggle Functionality -->
+    <script>
+        // Connect theme toggle button to ThemeManager
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            themeManager.toggle();
+        });
+    </script>
 </body>
 </html>

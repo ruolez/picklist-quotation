@@ -3,26 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
     <title>Settings - Picklist Converter</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=20251113-THEME">
 </head>
 <body>
-    <nav class="nav">
-        <div class="container">
-            <div class="nav-title">Picklist to Quotation Converter</div>
-            <ul class="nav-links">
-                <li><a href="/">Picklists</a></li>
-                <li><a href="/history">History</a></li>
-                <li><a href="/settings" class="active">Settings</a></li>
-            </ul>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+
+    <!-- Header with Dark Mode Toggle -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>Picklist to Quotation Converter</h1>
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">Picklists</a>
+                    <a href="/history" class="nav-link">History</a>
+                    <a href="/settings" class="nav-link active">Settings</a>
+                </nav>
+            </div>
+            <div class="header-right">
+                <!-- Theme Toggle Button -->
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-slider"></div>
+                </button>
+            </div>
         </div>
-    </nav>
+    </header>
 
-    <div class="container">
-        <h1 style="margin-bottom: 24px;">Settings</h1>
-
-        <!-- Alerts -->
-        <div id="alert-container"></div>
+    <main id="main-content" class="container">
+        <h1 class="mb-3">Settings</h1>
 
         <!-- ShipperPlatform Database Configuration -->
         <div class="card">
@@ -179,8 +189,19 @@
                 </div>
             </form>
         </div>
-    </div>
+    </main>
 
-    <script src="/static/js/settings.js"></script>
+    <!-- Theme and Keyboard Management Scripts -->
+    <script src="/static/js/theme.js?v=20251113-THEME"></script>
+    <script src="/static/js/keyboard.js?v=20251113-THEME"></script>
+    <script src="/static/js/settings.js?v=20251113-THEME"></script>
+
+    <!-- Theme Toggle Functionality -->
+    <script>
+        // Connect theme toggle button to ThemeManager
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            themeManager.toggle();
+        });
+    </script>
 </body>
 </html>

@@ -1,17 +1,38 @@
 // Settings page functionality
 
-function showAlert(message, type = 'info') {
-    const alertContainer = document.getElementById('alert-container');
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.textContent = message;
+// Toast notification system (2025 Enterprise Design System)
+function showToast(message, type = 'info') {
+    const container = document.querySelector('.toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
 
-    alertContainer.innerHTML = '';
-    alertContainer.appendChild(alert);
+    const icon = document.createElement('div');
+    icon.className = 'toast-icon';
 
+    const content = document.createElement('div');
+    content.className = 'toast-content';
+
+    const messageEl = document.createElement('div');
+    messageEl.className = 'toast-message';
+    messageEl.textContent = message;
+
+    content.appendChild(messageEl);
+    toast.appendChild(icon);
+    toast.appendChild(content);
+    container.appendChild(toast);
+
+    // Auto-remove after 5 seconds
     setTimeout(() => {
-        alert.remove();
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 300);
     }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
 }
 
 async function loadConfig() {
@@ -80,12 +101,12 @@ async function testShipperConnection() {
         const result = await response.json();
 
         if (result.success) {
-            showAlert('ShipperPlatform connection successful!', 'success');
+            showToast('ShipperPlatform connection successful!', 'success');
         } else {
-            showAlert('ShipperPlatform connection failed: ' + (result.error || 'Unknown error'), 'error');
+            showToast('ShipperPlatform connection failed: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        showAlert('Error testing connection: ' + error.message, 'error');
+        showToast('Error testing connection: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Test Connection';
@@ -115,12 +136,12 @@ async function testBackofficeConnection() {
         const result = await response.json();
 
         if (result.success) {
-            showAlert('BackOffice connection successful!', 'success');
+            showToast('BackOffice connection successful!', 'success');
         } else {
-            showAlert('BackOffice connection failed: ' + (result.error || 'Unknown error'), 'error');
+            showToast('BackOffice connection failed: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        showAlert('Error testing connection: ' + error.message, 'error');
+        showToast('Error testing connection: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Test Connection';
@@ -150,12 +171,12 @@ async function testInventoryConnection() {
         const result = await response.json();
 
         if (result.success) {
-            showAlert('Inventory connection successful!', 'success');
+            showToast('Inventory connection successful!', 'success');
         } else {
-            showAlert('Inventory connection failed: ' + (result.error || 'Unknown error'), 'error');
+            showToast('Inventory connection failed: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        showAlert('Error testing connection: ' + error.message, 'error');
+        showToast('Error testing connection: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Test Connection';
@@ -196,16 +217,16 @@ async function saveDbConfig() {
         const result = await response.json();
 
         if (result.success) {
-            showAlert('Database configuration saved successfully!', 'success');
+            showToast('Database configuration saved successfully!', 'success');
             // Clear password fields for security
             document.getElementById('shipper-password').value = '';
             document.getElementById('backoffice-password').value = '';
             document.getElementById('inventory-password').value = '';
         } else {
-            showAlert('Failed to save configuration: ' + (result.error || 'Unknown error'), 'error');
+            showToast('Failed to save configuration: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        showAlert('Error saving configuration: ' + error.message, 'error');
+        showToast('Error saving configuration: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Save Database Configuration';
@@ -226,7 +247,7 @@ async function saveDefaults() {
 
     // Validation
     if (defaults.polling_interval_seconds < 10) {
-        showAlert('Polling interval must be at least 10 seconds', 'error');
+        showToast('Polling interval must be at least 10 seconds', 'error');
         btn.disabled = false;
         btn.textContent = 'Save Defaults';
         return;
@@ -242,12 +263,12 @@ async function saveDefaults() {
         const result = await response.json();
 
         if (result.success) {
-            showAlert('Quotation defaults saved successfully!', 'success');
+            showToast('Quotation defaults saved successfully!', 'success');
         } else {
-            showAlert('Failed to save defaults: ' + (result.error || 'Unknown error'), 'error');
+            showToast('Failed to save defaults: ' + (result.error || 'Unknown error'), 'error');
         }
     } catch (error) {
-        showAlert('Error saving defaults: ' + error.message, 'error');
+        showToast('Error saving defaults: ' + error.message, 'error');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Save Defaults';

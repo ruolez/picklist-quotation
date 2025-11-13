@@ -7,18 +7,39 @@ let showArchived = false;
 let sortColumn = 'id'; // default sort by ID
 let sortDirection = 'desc'; // desc = newest first
 
-function showAlert(message, type = 'info') {
-    const alertContainer = document.getElementById('alert-container');
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type}`;
-    alert.innerHTML = message;
+// Toast notification system (2025 Enterprise Design System)
+function showToast(message, type = 'info') {
+    const container = document.querySelector('.toast-container') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
 
-    alertContainer.innerHTML = '';
-    alertContainer.appendChild(alert);
+    const icon = document.createElement('div');
+    icon.className = 'toast-icon';
 
+    const content = document.createElement('div');
+    content.className = 'toast-content';
+
+    const messageEl = document.createElement('div');
+    messageEl.className = 'toast-message';
+    messageEl.innerHTML = message;
+
+    content.appendChild(messageEl);
+    toast.appendChild(icon);
+    toast.appendChild(content);
+    container.appendChild(toast);
+
+    // Auto-remove after 5 seconds
     setTimeout(() => {
-        alert.remove();
-    }, 8000);
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+    return container;
 }
 
 function formatDate(dateString) {
@@ -122,7 +143,7 @@ async function loadPicklists() {
                 : 'No pending picklists found. All picklists have been converted!';
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-secondary);">
                         ${message}
                     </td>
                 </tr>
@@ -130,7 +151,7 @@ async function loadPicklists() {
             return;
         }
 
-        // Load product counts for each picklist
+        // Load picklists
         tbody.innerHTML = '';
         for (const picklist of picklists) {
             const row = document.createElement('tr');
@@ -138,32 +159,19 @@ async function loadPicklists() {
 
             const isChecked = selectedIds.has(picklist.id);
 
-            // Get product count
-            let productCount = '...';
-            try {
-                const config = await fetch('/api/config/sqlserver');
-                const configData = await config.json();
-                if (configData) {
-                    // We'll show a placeholder for now
-                    productCount = '-';
-                }
-            } catch (e) {
-                productCount = '-';
-            }
-
             let statusBadge, actionButton;
 
             if (showArchived) {
                 statusBadge = '<span class="badge badge-warning">Archived</span>';
                 actionButton = `
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="unarchiveSingle(${picklist.pick_list_id || picklist.id})">
+                    <button class="btn btn-small btn-secondary" onclick="unarchiveSingle(${picklist.pick_list_id || picklist.id})">
                         Unarchive
                     </button>
                 `;
             } else if (picklist.is_converted) {
-                statusBadge = '<span class="badge badge-success">✓ Converted</span>';
+                statusBadge = '<span class="badge badge-success">Converted</span>';
                 actionButton = `
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="archiveSingle(${picklist.id})">
+                    <button class="btn btn-small btn-secondary" onclick="archiveSingle(${picklist.id})">
                         Archive
                     </button>
                 `;
@@ -172,10 +180,10 @@ async function loadPicklists() {
                     ? '<span class="badge badge-warning">Locked</span>'
                     : '<span class="badge badge-info">Ready</span>';
                 actionButton = `
-                    <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; margin-right: 8px;" onclick="convertSingle(${picklist.id})">
+                    <button class="btn btn-small btn-primary" onclick="convertSingle(${picklist.id})">
                         Convert Now
                     </button>
-                    <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="archiveSingle(${picklist.id})">
+                    <button class="btn btn-small btn-secondary" onclick="archiveSingle(${picklist.id})">
                         Archive
                     </button>
                 `;
@@ -184,14 +192,13 @@ async function loadPicklists() {
             const picklistId = picklist.pick_list_id || picklist.id;
 
             row.innerHTML = `
-                <td>
+                <td class="col-checkbox-lg">
                     <input type="checkbox" class="picklist-checkbox" data-id="${picklistId}" ${isChecked ? 'checked' : ''}>
                 </td>
-                <td><strong>${picklistId}</strong></td>
-                <td>${formatDate(picklist.cdate || picklist.archived_at)}</td>
-                <td>${productCount}</td>
-                <td>${statusBadge}</td>
-                <td>
+                <td class="col-picklist-id"><strong>${picklistId}</strong></td>
+                <td class="col-created-date">${formatDate(picklist.cdate || picklist.archived_at)}</td>
+                <td class="col-status">${statusBadge}</td>
+                <td class="col-actions-wide">
                     ${actionButton}
                 </td>
             `;
@@ -398,7 +405,7 @@ async function convertSingle(picklistId) {
 
         if (!checkData.success) {
             console.log('[convertSingle] Check failed:', checkData.error);
-            showAlert(`Error checking products: ${checkData.error}`, 'error');
+            showToast(`Error checking products: ${checkData.error}`, 'error');
             actionCell.innerHTML = originalHtml;
             return;
         }
@@ -433,22 +440,22 @@ async function convertSingle(picklistId) {
         if (data.success && data.results) {
             const results = data.results;
             if (results.converted > 0) {
-                showAlert(`Picklist ${picklistId} converted successfully!`, 'success');
+                showToast(`Picklist ${picklistId} converted successfully!`, 'success');
                 setTimeout(() => {
                     loadPicklists();
                 }, 1500);
             } else {
                 const error = results.errors[0]?.error || 'Unknown error';
-                showAlert(`Picklist ${picklistId} conversion failed: ${error}`, 'error');
+                showToast(`Picklist ${picklistId} conversion failed: ${error}`, 'error');
                 actionCell.innerHTML = originalHtml;
             }
         } else {
-            showAlert(`Conversion failed: ${data.error || 'Unknown error'}`, 'error');
+            showToast(`Conversion failed: ${data.error || 'Unknown error'}`, 'error');
             actionCell.innerHTML = originalHtml;
         }
 
     } catch (error) {
-        showAlert(`Error: ${error.message}`, 'error');
+        showToast(`Error: ${error.message}`, 'error');
         actionCell.innerHTML = originalHtml;
     }
 }
@@ -470,16 +477,16 @@ async function archiveSelected() {
         const data = await response.json();
 
         if (data.success) {
-            showAlert(data.message, 'success');
+            showToast(data.message, 'success');
             selectedIds.clear();
             setTimeout(() => {
                 loadPicklists();
             }, 1500);
         } else {
-            showAlert(`Archive failed: ${data.error || 'Unknown error'}`, 'error');
+            showToast(`Archive failed: ${data.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
-        showAlert(`Error: ${error.message}`, 'error');
+        showToast(`Error: ${error.message}`, 'error');
     }
 }
 
@@ -496,16 +503,16 @@ async function unarchiveSelected() {
         const data = await response.json();
 
         if (data.success) {
-            showAlert(data.message, 'success');
+            showToast(data.message, 'success');
             selectedIds.clear();
             setTimeout(() => {
                 loadPicklists();
             }, 1500);
         } else {
-            showAlert(`Unarchive failed: ${data.error || 'Unknown error'}`, 'error');
+            showToast(`Unarchive failed: ${data.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
-        showAlert(`Error: ${error.message}`, 'error');
+        showToast(`Error: ${error.message}`, 'error');
     }
 }
 
@@ -524,15 +531,15 @@ async function archiveSingle(picklistId) {
         const data = await response.json();
 
         if (data.success) {
-            showAlert(`Picklist ${picklistId} archived successfully!`, 'success');
+            showToast(`Picklist ${picklistId} archived successfully!`, 'success');
             setTimeout(() => {
                 loadPicklists();
             }, 1500);
         } else {
-            showAlert(`Archive failed: ${data.error || 'Unknown error'}`, 'error');
+            showToast(`Archive failed: ${data.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
-        showAlert(`Error: ${error.message}`, 'error');
+        showToast(`Error: ${error.message}`, 'error');
     }
 }
 
@@ -547,15 +554,15 @@ async function unarchiveSingle(picklistId) {
         const data = await response.json();
 
         if (data.success) {
-            showAlert(`Picklist ${picklistId} unarchived successfully!`, 'success');
+            showToast(`Picklist ${picklistId} unarchived successfully!`, 'success');
             setTimeout(() => {
                 loadPicklists();
             }, 1500);
         } else {
-            showAlert(`Unarchive failed: ${data.error || 'Unknown error'}`, 'error');
+            showToast(`Unarchive failed: ${data.error || 'Unknown error'}`, 'error');
         }
     } catch (error) {
-        showAlert(`Error: ${error.message}`, 'error');
+        showToast(`Error: ${error.message}`, 'error');
     }
 }
 
@@ -577,7 +584,7 @@ function showMissingProductsModal(missing, totalProducts, missingCount, canCopyC
 
     // Show products found in inventory first (green)
     foundInInventory.forEach(product => {
-        productsHtml += `<tr style="background-color: #e8f5e9;">
+        productsHtml += `<tr style="background-color: var(--success-light);" data-status="found-in-inventory">
             <td style="padding: 8px; border-bottom: 1px solid var(--outline);">${product.picklist_id}</td>
             <td style="padding: 8px; border-bottom: 1px solid var(--outline);"><code>${product.barcode}</code></td>
             <td style="padding: 8px; border-bottom: 1px solid var(--outline);">${product.name}</td>
@@ -588,7 +595,7 @@ function showMissingProductsModal(missing, totalProducts, missingCount, canCopyC
 
     // Show products not found anywhere (red)
     notFound.forEach(product => {
-        productsHtml += `<tr style="background-color: #ffebee;">
+        productsHtml += `<tr style="background-color: var(--error-light);">
             <td style="padding: 8px; border-bottom: 1px solid var(--outline);">${product.picklist_id}</td>
             <td style="padding: 8px; border-bottom: 1px solid var(--outline);"><code>${product.barcode}</code></td>
             <td style="padding: 8px; border-bottom: 1px solid var(--outline);">${product.name}</td>
@@ -626,10 +633,9 @@ function showMissingProductsModal(missing, totalProducts, missingCount, canCopyC
 
     const modalHtml = `
         <div class="modal-overlay" id="missing-products-modal">
-            <div class="modal-content">
+            <div class="modal">
                 <div class="modal-header">
-                    <h2 style="margin: 0;">⚠️ Missing Products</h2>
-                    <button class="modal-close" onclick="closeMissingProductsModal()">&times;</button>
+                    <h2>⚠️ Missing Products</h2>
                 </div>
                 <div class="modal-body">
                     ${messageHtml}
@@ -659,9 +665,17 @@ function showMissingProductsModal(missing, totalProducts, missingCount, canCopyC
 function closeMissingProductsModal() {
     const modal = document.getElementById('missing-products-modal');
     if (modal) {
-        modal.remove();
+        modal.classList.add('closing');
+        setTimeout(() => modal.remove(), 200);
     }
 }
+
+// Close modal when clicking outside (on overlay)
+document.addEventListener('click', (e) => {
+    if (e.target.id === 'missing-products-modal') {
+        closeMissingProductsModal();
+    }
+});
 
 async function copyProductsFromInventory() {
     const btn = document.getElementById('btn-copy-inventory');
@@ -675,16 +689,16 @@ async function copyProductsFromInventory() {
         // Get all products with status 'found_in_inventory'
         const modal = document.getElementById('missing-products-modal');
         const tbody = modal.querySelector('tbody');
-        const rows = tbody.querySelectorAll('tr[style*="background-color: #e8f5e9"]'); // Green rows
+        const rows = tbody.querySelectorAll('tr[data-status="found-in-inventory"]'); // Found in inventory rows
 
-        // Extract barcodes from green rows
+        // Extract barcodes from found rows
         const barcodes = Array.from(rows).map(row => {
             const barcodeCell = row.querySelector('code');
             return barcodeCell ? barcodeCell.textContent : null;
         }).filter(barcode => barcode !== null);
 
         if (barcodes.length === 0) {
-            showAlert('No products to copy', 'error');
+            showToast('No products to copy', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
             return;
@@ -702,7 +716,7 @@ async function copyProductsFromInventory() {
         const result = await response.json();
 
         if (!result.success) {
-            showAlert(`Copy failed: ${result.error || 'Unknown error'}`, 'error');
+            showToast(`Copy failed: ${result.error || 'Unknown error'}`, 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
             return;
@@ -710,12 +724,12 @@ async function copyProductsFromInventory() {
 
         // Show success message
         if (result.copied_count > 0) {
-            showAlert(`Successfully copied ${result.copied_count} product(s) from Inventory to BackOffice!`, 'success');
+            showToast(`Successfully copied ${result.copied_count} product(s) from Inventory to BackOffice!`, 'success');
         }
 
         if (result.failed_count > 0) {
             const failedBarcodes = result.failed.map(f => f.barcode).join(', ');
-            showAlert(`Failed to copy ${result.failed_count} product(s): ${failedBarcodes}`, 'error');
+            showToast(`Failed to copy ${result.failed_count} product(s): ${failedBarcodes}`, 'error');
         }
 
         // Close modal and allow user to retry conversion
@@ -730,7 +744,7 @@ async function copyProductsFromInventory() {
 
     } catch (error) {
         console.error('Error copying products:', error);
-        showAlert(`Error: ${error.message}`, 'error');
+        showToast(`Error: ${error.message}`, 'error');
         btn.disabled = false;
         btn.innerHTML = originalText;
     }

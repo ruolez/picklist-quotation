@@ -3,35 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
     <title>History - Picklist Converter</title>
-    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css?v=20251113-THEME">
 </head>
 <body>
-    <nav class="nav">
-        <div class="container">
-            <div class="nav-title">Picklist to Quotation Converter</div>
-            <ul class="nav-links">
-                <li><a href="/">Picklists</a></li>
-                <li><a href="/history" class="active">History</a></li>
-                <li><a href="/settings">Settings</a></li>
-            </ul>
-        </div>
-    </nav>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
 
-    <div class="container">
-        <h1 style="margin-bottom: 24px;">Conversion History</h1>
+    <!-- Header with Dark Mode Toggle -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1>Picklist to Quotation Converter</h1>
+                <nav class="nav-links">
+                    <a href="/" class="nav-link">Picklists</a>
+                    <a href="/history" class="nav-link active">History</a>
+                    <a href="/settings" class="nav-link">Settings</a>
+                </nav>
+            </div>
+            <div class="header-right">
+                <!-- Theme Toggle Button -->
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+                    <div class="theme-toggle-slider"></div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content" class="container">
+        <h1 class="mb-3">Conversion History</h1>
 
         <!-- Filter Section -->
-        <div class="card" style="margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div class="card mb-2">
+            <div class="btn-group" style="justify-content: space-between;">
                 <div class="filter-buttons">
-                    <button class="filter-btn active" data-status="all">All</button>
-                    <button class="filter-btn" data-status="success">Success</button>
-                    <button class="filter-btn" data-status="failed">Failed</button>
+                    <button class="btn-filter active" data-status="all" aria-label="Show all records">All</button>
+                    <button class="btn-filter" data-status="success" aria-label="Show successful conversions">Success</button>
+                    <button class="btn-filter" data-status="failed" aria-label="Show failed conversions">Failed</button>
                 </div>
                 <div class="action-buttons">
-                    <button id="btn-delete-selected" class="btn btn-danger" disabled>Delete Selected (0)</button>
-                    <button id="btn-delete-all-failed" class="btn btn-danger">Delete All Failed</button>
+                    <button id="btn-delete-selected" class="btn btn-error" disabled aria-label="Delete selected records">Delete Selected (0)</button>
+                    <button id="btn-delete-all-failed" class="btn btn-error" aria-label="Delete all failed records">Delete All Failed</button>
                 </div>
             </div>
         </div>
@@ -42,20 +55,20 @@
                 <table id="history-table">
                     <thead>
                         <tr>
-                            <th style="width: 40px;">
-                                <input type="checkbox" id="select-all">
+                            <th class="col-checkbox">
+                                <input type="checkbox" id="select-all" aria-label="Select all records">
                             </th>
                             <th>Picklist ID</th>
                             <th>Quotation Number</th>
                             <th>Status</th>
                             <th>Converted At</th>
-                            <th style="width: 300px;">Error Message</th>
-                            <th style="width: 100px;">Actions</th>
+                            <th class="col-error-message">Error Message</th>
+                            <th class="col-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="history-body">
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px;">
+                            <td colspan="7" class="table-loading-cell">
                                 <span class="spinner"></span> Loading history...
                             </td>
                         </tr>
@@ -63,25 +76,43 @@
                 </table>
             </div>
 
-            <div class="btn-group" style="margin-top: 20px;">
-                <button id="btn-prev" class="btn btn-secondary" disabled>Previous</button>
-                <button id="btn-next" class="btn btn-secondary">Next</button>
+            <div class="btn-group mt-2">
+                <button id="btn-prev" class="btn btn-secondary" disabled aria-label="Previous page">Previous</button>
+                <button id="btn-next" class="btn btn-secondary" aria-label="Next page">Next</button>
             </div>
         </div>
-    </div>
+    </main>
 
     <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="modal">
-        <div class="modal-content">
-            <h2 id="modal-title">Confirm Deletion</h2>
-            <p id="modal-message">Are you sure you want to delete this record?</p>
-            <div class="btn-group" style="margin-top: 24px;">
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-title">Confirm Deletion</h2>
+            </div>
+            <div class="modal-body">
+                <p id="modal-message">Are you sure you want to delete this record?</p>
+            </div>
+            <div class="modal-footer">
+                <div class="keyboard-hint">
+                    <kbd>Esc</kbd> Cancel · <kbd>Enter</kbd> Confirm
+                </div>
                 <button id="modal-cancel" class="btn btn-secondary">Cancel</button>
-                <button id="modal-confirm" class="btn btn-danger">Delete</button>
+                <button id="modal-confirm" class="btn btn-error">Delete</button>
             </div>
         </div>
     </div>
 
-    <script src="/static/js/history.js"></script>
+    <!-- Theme and Keyboard Management Scripts -->
+    <script src="/static/js/theme.js?v=20251113-THEME"></script>
+    <script src="/static/js/keyboard.js?v=20251113-THEME"></script>
+    <script src="/static/js/history.js?v=20251113-THEME"></script>
+
+    <!-- Theme Toggle Functionality -->
+    <script>
+        // Connect theme toggle button to ThemeManager
+        document.getElementById('themeToggle')?.addEventListener('click', () => {
+            themeManager.toggle();
+        });
+    </script>
 </body>
 </html>
