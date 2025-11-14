@@ -632,7 +632,7 @@ function showMissingProductsModal(missing, totalProducts, missingCount, canCopyC
         : '';
 
     const modalHtml = `
-        <div class="modal-overlay" id="missing-products-modal">
+        <div class="modal-overlay active" id="missing-products-modal">
             <div class="modal">
                 <div class="modal-header">
                     <h2>⚠️ Missing Products</h2>
