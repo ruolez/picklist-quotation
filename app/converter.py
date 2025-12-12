@@ -392,7 +392,8 @@ class PicklistConverter:
             cursor = conn.cursor()
             cursor.execute("""
                 SELECT BusinessName, AccountNo, ShipTo, ShipAddress1, ShipAddress2,
-                       ShipContact, ShipCity, ShipState, ShipZipCode, ShipPhone_Number
+                       ShipContact, ShipCity, ShipState, ShipZipCode, ShipPhone_Number,
+                       SalesRepID
                 FROM dbo.Customers_tbl
                 WHERE CustomerID = %s
             """, (customer_id,))
@@ -551,7 +552,7 @@ class PicklistConverter:
                     self._truncate_string(customer.get('ShipZipCode') or '', 10),
                     self._truncate_string(customer.get('ShipPhone_Number') or '', 13),
                     0,  # ShipperID
-                    1,  # SalesRepID
+                    customer.get('SalesRepID') or 1,  # SalesRepID (from customer, fallback to 1)
                     1,  # TermID
                     '',  # Header
                     '',  # Footer
