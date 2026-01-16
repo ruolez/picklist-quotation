@@ -373,18 +373,44 @@ class PicklistConverter:
             'failed_barcodes': all_failed
         }
 
-    def get_next_quotation_number(self, backoffice_db: SQLServerManager) -> int:
-        """Get the next quotation number by finding max and adding 1"""
+    def get_next_quotation_number(self, backoffice_db: SQLServerManager) -> str:
+        """
+        Generate next quotation number in format: [Month][Day][Year][DB_ID][Counter]
+        - Month/Day: No zero-padding
+        - DB_ID: Hardcoded identifier (18) for this database instance
+        - Counter: Resets daily, increments for each quotation with same prefix
+
+        Example: 1162025181 = Nov 6, 2025, DB 18, 1st quotation of the day
+        """
         with backoffice_db.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT MAX(CAST(QuotationNumber AS BIGINT)) AS MaxNumber
+
+            # Step 1: Build today's prefix (no zero-padding on month/day)
+            now = datetime.now()
+            month = str(now.month)
+            day = str(now.day)
+            year = str(now.year)
+            db_id = "18"  # Hardcoded DB identifier for this database instance
+
+            full_prefix = f"{month}{day}{year}{db_id}"
+            prefix_len = len(full_prefix)
+
+            # Step 2: Find next counter for today's prefix
+            cursor.execute(f"""
+                SELECT ISNULL(
+                    MAX(CAST(SUBSTRING(QuotationNumber, {prefix_len + 1},
+                        LEN(QuotationNumber) - {prefix_len}) AS INT)),
+                    0
+                ) + 1 AS next_counter
                 FROM dbo.Quotations_tbl
-                WHERE ISNUMERIC(QuotationNumber) = 1
+                WHERE QuotationNumber LIKE '{full_prefix}%'
+                  AND ISNUMERIC(QuotationNumber) = 1
             """)
-            result = cursor.fetchone()
-            max_number = result['MaxNumber'] if result and result['MaxNumber'] else 0
-            return max_number + 1
+            counter_result = cursor.fetchone()
+            next_counter = counter_result['next_counter'] if counter_result else 1
+
+            # Step 3: Return new quotation number
+            return f"{full_prefix}{next_counter}"
 
     def get_customer_data(self, backoffice_db: SQLServerManager, customer_id: int) -> Optional[dict]:
         """Fetch customer information from Customers_tbl"""
